@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { AppStackParamList, Project } from '../../types';
 import { projectService } from '../../services/apiServices';
 import { useAuthStore } from '../../store/authStore';
-import * as FileSystem from 'expo-file-system';
+import FileSystemModule from 'expo-file-system/build/ExpoFileSystem';
 import * as Sharing from 'expo-sharing';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../../services/api';
@@ -27,12 +27,12 @@ export default function ProjectsScreen({ navigation }: Props) {
             const token = await SecureStore.getItemAsync('auth_token');
             const baseUrl = api.defaults.baseURL?.replace('/api/v1', '') || '';
             const url = `${baseUrl}/api/v1/projects/${project.id}/export`;
-            const dest = (FileSystem.cacheDirectory ?? '') + `proyecto-${project.id}.xlsx`;
-            const result = await FileSystem.downloadAsync(url, dest, {
+            const destFile = new FileSystemModule.FileSystemFile(FileSystemModule.cacheDirectory + `proyecto-${project.id}.xlsx`);
+            const uri = await FileSystemModule.downloadFileAsync(url, destFile, {
                 headers: { Authorization: `Bearer ${token || ''}` },
             });
-            if (result.status === 200 && await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(result.uri, {
+            if (uri && await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(uri, {
                     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     dialogTitle: `${project.name} — Export`,
                 });
