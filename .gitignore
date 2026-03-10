@@ -1,0 +1,25 @@
+# == BACKEND (.NET) ==
+backend/*/bin/
+backend/*/obj/
+backend/**/*.user
+backend/*.sln.user
+*.suo
+.vs/
+
+# Secretos locales (NO subir contraseñas ni conexiones reales)
+backend/**/appsettings.Development.json
+backend/**/appsettings.Local.json
+
+# == MOBILE (Expo / Node) ==
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/build/
+mobile/.env.local
+mobile/.env.*.local
+
+# == General ==
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
