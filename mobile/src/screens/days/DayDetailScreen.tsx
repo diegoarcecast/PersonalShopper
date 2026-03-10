@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { File, Paths } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as SecureStore from 'expo-secure-store';
 import { AppStackParamList, Order } from '../../types';
@@ -41,14 +41,13 @@ export default function DayDetailScreen({ navigation, route }: Props) {
             const token = await SecureStore.getItemAsync('auth_token');
             const baseUrl = api.defaults.baseURL?.replace('/api/v1', '') || '';
             const url = `${baseUrl}/api/v1/days/${dayId}/orders/export`;
-            // expo-file-system v2 API
-            const destDir = new (await import('expo-file-system')).Directory(Paths.cache);
-            const file = await File.downloadFileAsync(url, destDir, {
+            const dest = (FileSystem.cacheDirectory ?? '') + `ordenes-dia-${dayId}.xlsx`;
+            const result = await FileSystem.downloadAsync(url, dest, {
                 headers: { Authorization: `Bearer ${token || ''}` },
             });
-            if (file && file.uri) {
+            if (result.status === 200) {
                 if (await Sharing.isAvailableAsync()) {
-                    await Sharing.shareAsync(file.uri, {
+                    await Sharing.shareAsync(result.uri, {
                         mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         dialogTitle: `Órdenes Día #${dayNumber}`,
                     });

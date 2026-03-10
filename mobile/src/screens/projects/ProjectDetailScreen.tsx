@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { AppStackParamList, Trip } from '../../types';
 import { tripService } from '../../services/apiServices';
-import { File, Paths } from 'expo-file-system';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../../services/api';
@@ -27,12 +27,12 @@ export default function ProjectDetailScreen({ navigation, route }: Props) {
             const token = await SecureStore.getItemAsync('auth_token');
             const baseUrl = api.defaults.baseURL?.replace('/api/v1', '') || '';
             const url = `${baseUrl}/api/v1/trips/${trip.id}/export`;
-            const destDir = new (await import('expo-file-system')).Directory(Paths.cache);
-            const file = await File.downloadFileAsync(url, destDir, {
+            const dest = (FileSystem.cacheDirectory ?? '') + `viaje-${trip.id}.xlsx`;
+            const result = await FileSystem.downloadAsync(url, dest, {
                 headers: { Authorization: `Bearer ${token || ''}` },
             });
-            if (file?.uri && await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(file.uri, {
+            if (result.status === 200 && await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(result.uri, {
                     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                     dialogTitle: `${trip.name} — Export`,
                 });
