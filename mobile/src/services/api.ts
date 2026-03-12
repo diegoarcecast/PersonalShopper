@@ -1,6 +1,5 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
@@ -29,3 +28,4 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+

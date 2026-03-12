@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import FileSystemModule from 'expo-file-system/build/ExpoFileSystem';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as SecureStore from 'expo-secure-store';
 import { AppStackParamList, Order } from '../../types';
@@ -41,18 +41,19 @@ export default function DayDetailScreen({ navigation, route }: Props) {
             const token = await SecureStore.getItemAsync('auth_token');
             const baseUrl = api.defaults.baseURL?.replace('/api/v1', '') || '';
             const url = `${baseUrl}/api/v1/days/${dayId}/orders/export`;
-            const destDir = new FileSystemModule.FileSystemDirectory(FileSystemModule.cacheDirectory);
-            const destFile = new FileSystemModule.FileSystemFile(FileSystemModule.cacheDirectory + `ordenes-dia-${dayId}.xlsx`);
-            const uri = await FileSystemModule.downloadFileAsync(url, destFile, {
+            const destFile = new File(Paths.cache, `ordenes-dia-${dayId}.xlsx`);
+            const file = await File.downloadFileAsync(url, destFile, {
                 headers: { Authorization: `Bearer ${token || ''}` },
+                idempotent: true,
             });
+            const uri = file.uri;
             if (uri && await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(uri, {
                     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    dialogTitle: `Órdenes Día #${dayNumber}`,
+                    dialogTitle: `Ordenes Dia #${dayNumber}`,
                 });
             } else {
-                Alert.alert('Éxito', `Archivo del día #${dayNumber} guardado`);
+                Alert.alert('Exito', `Archivo del dia #${dayNumber} guardado`);
             }
         } catch (e: any) {
             Alert.alert('Error', 'Error al exportar: ' + e.message);
@@ -168,3 +169,4 @@ const styles = StyleSheet.create({
     filterChipText: { fontSize: 13, color: '#555', fontWeight: '600' },
     filterChipTextActive: { color: '#fff' },
 });
+

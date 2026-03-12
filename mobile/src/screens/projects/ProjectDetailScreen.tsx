@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { AppStackParamList, Trip } from '../../types';
 import { tripService } from '../../services/apiServices';
-import FileSystemModule from 'expo-file-system/build/ExpoFileSystem';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as SecureStore from 'expo-secure-store';
 import { api } from '../../services/api';
@@ -27,17 +27,19 @@ export default function ProjectDetailScreen({ navigation, route }: Props) {
             const token = await SecureStore.getItemAsync('auth_token');
             const baseUrl = api.defaults.baseURL?.replace('/api/v1', '') || '';
             const url = `${baseUrl}/api/v1/trips/${trip.id}/export`;
-            const destFile = new FileSystemModule.FileSystemFile(FileSystemModule.cacheDirectory + `viaje-${trip.id}.xlsx`);
-            const uri = await FileSystemModule.downloadFileAsync(url, destFile, {
+            const destFile = new File(Paths.cache, `viaje-${trip.id}.xlsx`);
+            const file = await File.downloadFileAsync(url, destFile, {
                 headers: { Authorization: `Bearer ${token || ''}` },
+                idempotent: true,
             });
+            const uri = file.uri;
             if (uri && await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(uri, {
                     mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                    dialogTitle: `${trip.name} — Export`,
+                    dialogTitle: `${trip.name} Export`,
                 });
             } else {
-                Alert.alert('Éxito', 'Archivo generado');
+                Alert.alert('Exito', 'Archivo generado');
             }
         } catch (e: any) {
             Alert.alert('Error', 'Error al exportar: ' + e.message);
@@ -151,3 +153,4 @@ const styles = StyleSheet.create({
     saveBtn: { flex: 1, padding: 14, borderRadius: 10, backgroundColor: '#6C47FF', alignItems: 'center' },
     saveBtnText: { color: '#fff', fontWeight: 'bold' },
 });
+
